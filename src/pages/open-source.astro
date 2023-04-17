@@ -1,0 +1,49 @@
+---
+import BaseLayout from "../layouts/base.astro";
+import Highlights from "../components/highlights.astro";
+import ProjectSummary from "../components/project-summary.astro";
+import TextGradient from "../components/text-gradient.astro";
+import ExternalIcon from "css.gg/icons/svg/external.svg?raw";
+
+const projects = await Astro.glob("../content/open-source/*.mdx");
+---
+
+
+<BaseLayout>
+  <h1 class="px-8 my-12 text-6xl font-bold">Open Source</h1>
+  <main class="px-8 space-y-12 text-xl">
+    <p>
+      I spend most of my free time working on a handful of open-source packages
+      for <a href="httpsL//gleam.run">Gleam</a>. You can read about a few of them
+      below. I also jump in and out of work on my own programming language:
+      <a href="https://github.com/ren-lang/compiler">Ren</a>.
+
+      In the wider open-source community, you can find me answering all sorts of
+      questions on the <a href="">Gleam Discord server</a> as well as the
+      <a href="">Elm Slack server</a>. If you ever have any questions about either
+      of those two languages, or functional programming in general, now you know
+      where to find me!
+    </p>
+  </main>
+
+  <hr class="mx-8 my-12" />
+
+  <div class="px-8 pb-8 space-y-8">
+    {projects.map((project) => <ProjectSummary {...project.frontmatter} />)}
+  </div>
+
+  <div class="fixed inset-x-0 bottom-0 max-w-xl px-8 pb-5 mx-auto">
+    <a
+      class="flex items-center justify-between px-4 py-3 rounded-lg shadow-lg bg-stone-700/30 backdrop-blur group hover:bg-stone-700/50"
+      href="https://github.com/sponsors/hayleigh-dot-dev/"
+    >
+      <p class="text-sm leading-6 group-hover:text-stone-50 text-stone-400 group-hover:underline">
+        If you want, please consider buying me a coffee via GitHub Sponsors!
+      </p>
+      <span
+        class="inline-block align-middle"
+        set:html={ExternalIcon}
+      />
+    </a>
+  </div>
+</BaseLayout>

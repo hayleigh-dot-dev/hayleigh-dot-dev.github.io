@@ -1,0 +1,21 @@
+<ul class="grid grid-cols-4 py-8 my-12 border-t border-y border-stone-700">
+  {
+    Astro.props.items.map((item) => (
+      <li class="px-4 px-8 py-6">
+        {item.label && (
+          <p class="text-sm font-medium leading-6 text-stone-500">
+            {item.label}
+          </p>
+        )}
+        <p class="flex items-baseline mt-2 gap-x-2">
+          {item.value && (
+            <span class="text-4xl font-semibold tracking-tight text-white">
+              {item.value}
+            </span>
+          )}
+          {item.unit && <span class="text-sm text-stone-500">{item.unit}</span>}
+        </p>
+      </li>
+    ))
+  }
+</ul>

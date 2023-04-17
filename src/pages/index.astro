@@ -1,81 +1,42 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import Card from '../components/Card.astro';
+import BaseLayout from "../layouts/base.astro";
+import Highlights from "../components/highlights.astro";
+import PostPreview from "../components/post-preview.astro";
+import TextGradient from "../components/text-gradient.astro";
+
+const allPosts = await Astro.glob("../content/blog/*.mdx");
+const posts = allPosts
+  .filter((post) => post.frontmatter.published)
+  .slice(0, 3)
+  .sort((a, b) => b.frontmatter.date.localeCompare(a.frontmatter.date));
 ---
 
-<Layout title="Welcome to Astro.">
-	<main>
-		<h1>Welcome to <span class="text-gradient">Astro</span></h1>
-		<p class="instructions">
-			To get started, open the directory <code>src/pages</code> in your project.<br />
-			<strong>Code Challenge:</strong> Tweak the "Welcome to Astro" message above.
-		</p>
-		<ul role="list" class="link-card-grid">
-			<Card
-				href="https://docs.astro.build/"
-				title="Documentation"
-				body="Learn how Astro works and explore the official API docs."
-			/>
-			<Card
-				href="https://astro.build/integrations/"
-				title="Integrations"
-				body="Supercharge your project with new frameworks and libraries."
-			/>
-			<Card
-				href="https://astro.build/themes/"
-				title="Themes"
-				body="Explore a galaxy of community-built starter themes."
-			/>
-			<Card
-				href="https://astro.build/chat/"
-				title="Community"
-				body="Come say hi to our amazing Discord community. ❤️"
-			/>
-		</ul>
-	</main>
-</Layout>
+<BaseLayout>
+  <main class="max-w-xl mx-auto my-24 space-y-12">
+    <h1 class="font-bold text-center text-8xl">Hi, I'm Hayleigh!</h1>
+    <p class="text-xl text-stone-300">
+      I'm a web developer and developer relations engineer{" "}
+      <span class="line-through text-stone-500">stuck</span> based in the UK. I build
+      <TextGradient from="from-pink-300" to="to-rose-300">
+        communities
+      </TextGradient>
+      and write incredible
+      <TextGradient from="from-indigo-300" to="to-blue-300">docs</TextGradient>.
+      Interested?{" "}
+      <a href="mailto:me@hayleigh.dev" class="underline"> Let's chat!</a>
+    </p>
+  </main>
 
-<style>
-	main {
-		margin: auto;
-		padding: 1.5rem;
-		max-width: 60ch;
-	}
-	h1 {
-		font-size: 3rem;
-		font-weight: 800;
-		margin: 0;
-	}
-	.text-gradient {
-		background-image: var(--accent-gradient);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-size: 400%;
-		background-position: 0%;
-	}
-	.instructions {
-		line-height: 1.6;
-		margin: 1rem 0;
-		border: 1px solid rgba(var(--accent), 25%);
-		background-color: white;
-		padding: 1rem;
-		border-radius: 0.4rem;
-	}
-	.instructions code {
-		font-size: 0.875em;
-		font-weight: bold;
-		background: rgba(var(--accent), 12%);
-		color: rgb(var(--accent));
-		border-radius: 4px;
-		padding: 0.3em 0.45em;
-	}
-	.instructions strong {
-		color: rgb(var(--accent));
-	}
-	.link-card-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(24ch, 1fr));
-		gap: 1rem;
-		padding: 0;
-	}
-</style>
+  <Highlights
+    items={[
+      { label: "Cats", value: 2 },
+      { label: "Time on TikTok", value: "Lots", unit: "mins" },
+      { label: "Cups of coffee", value: 3, unit: "/ day" },
+      { label: "Discord uptime", value: "99.5%" },
+    ]}
+  />
+
+  <div class="px-8 space-y-8">
+    {posts.map((post) => <PostPreview {...post.frontmatter} />)}
+  </div>
+</BaseLayout>

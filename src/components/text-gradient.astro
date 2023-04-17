@@ -1,0 +1,9 @@
+<span
+  class={`
+    bg-gradient-to-r ${Astro.props.from} ${Astro.props.via ?? ""} ${
+    Astro.props.to
+  } inline-block text-transparent bg-clip-text
+  `}
+>
+  <slot />
+</span>

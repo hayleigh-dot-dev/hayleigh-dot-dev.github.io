@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>{Astro.props.title}</title>
+
+    <link rel="preconnect" href="https://fonts.bunny.net" />
+    <link
+      href="https://fonts.bunny.net/css?family=inter:100,200,300,400,500,600,700,800,900"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body class={`bg-stone-900 text-stone-100 ${Astro.props["class"] ?? ""}`}>
+    <header
+      class="fixed top-0 flex items-center w-full px-8 py-4 bg-stone-900/30 backdrop-blur-md"
+    >
+      <a class="mr-12 text-xl font-bold" href="/">hayleigh.dev</a>
+      <nav class="flex-1">
+        <ul class="flex gap-6">
+          <li>
+            <a class="hover:underline" href="/blog">blog</a>
+          </li>
+
+          <li>
+            <a class="hover:underline" href="/open-source">open source</a>
+          </li>
+
+          <li>
+            <a class="text-stone-500" href="#">speaking</a>
+          </li>
+
+          <li>
+            <a class="text-stone-500" href="#">about</a>
+          </li>
+        </ul>
+      </nav>
+      <a href="/no-nazis">🏳️‍⚧️</a>
+    </header>
+
+    <div class="max-w-4xl py-8 mx-auto">
+      <slot />
+    </div>
+  </body>
+</html>

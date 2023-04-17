@@ -1,0 +1,18 @@
+---
+import BaseLayout from "../layouts/base.astro";
+import Highlights from "../components/highlights.astro";
+import PostPreview from "../components/post-preview.astro";
+import TextGradient from "../components/text-gradient.astro";
+
+const allPosts = await Astro.glob("../content/blog/*.mdx");
+const posts = allPosts
+  .filter((post) => post.frontmatter.published)
+  .sort((a, b) => b.frontmatter.date.localeCompare(a.frontmatter.date));
+---
+
+<BaseLayout>
+  <h1 class="px-8 my-12 text-6xl font-bold">Blog</h1>
+  <main class="px-8 space-y-8">
+    {posts.map((post) => <PostPreview {...post.frontmatter} />)}
+  </main>
+</BaseLayout>

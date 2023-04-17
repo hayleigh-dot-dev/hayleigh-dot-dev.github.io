@@ -1,0 +1,57 @@
+---
+import ExternalIcon from "css.gg/icons/svg/external.svg?raw";
+import ArrowRightIcon from "css.gg/icons/svg/arrow-right.svg?raw";
+
+const { date, external_url, slug, summary, tags, title } = Astro.props;
+const url = external_url ?? `/blog/${slug}`;
+---
+
+<article class="grid grid-cols-5 gap-4">
+  <div class="col-span-4">
+    <header class="group">
+      <a
+        class="flex items-center text-2xl font-bold group-hover:underline"
+        href={url}
+      >
+        {title}
+        {
+          external_url && (
+            <span
+              class="ml-2 text-stone-500 group-hover:text-stone-300"
+              set:html={ExternalIcon}
+            />
+          )
+        }
+      </a>
+    </header>
+
+    <p class="my-4">
+      {summary}
+    </p>
+
+    <footer class="group text-stone-500 hover:text-stone-300">
+      <a href={url} class="inline-flex items-center group-hover:underline">
+        <span>Keep reading</span>
+        <span class="ml-2" set:html={ArrowRightIcon} />
+      </a>
+    </footer>
+  </div>
+
+  <aside class="col-span-1 text-right text-stone-500">
+    {date && <time>{new Date(Date.parse(date)).toDateString()}</time>}
+    <ul class="flex flex-row-reverse flex-wrap gap-2 my-4">
+      {
+        tags.map((tag) => (
+          <li>
+            <a
+              href={`/blog/tags/${tag}`}
+              class="inline-flex items-center px-2 py-1 text-sm font-medium leading-4 rounded-full text-stone-500 bg-stone-800 hover:text-stone-300"
+            >
+              {tag}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </aside>
+</article>

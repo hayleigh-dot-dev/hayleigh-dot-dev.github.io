@@ -1,0 +1,596 @@
+---
+date: "2021-02-26"
+published: true
+slug: "phantom-types-in-gleam"
+summary: "
+  Phantom types are a sneaky way to add extra information to your types without
+  changing the runtime representation. In this post we'll look at how to define
+  phantom types in Gleam and some of the ways they can be used.
+"
+tags: [gleam, guide]
+title: "Phantom Types in Gleam"
+---
+
+# {frontmatter.title}
+
+In this post we're going to be looking at a more advanced use of
+[Gleam](https://gleam.run/)'s type system, known as phantom types. Hopefully by
+the end of this you'll have another tool in your belt to help you better model
+data in your programs. And fear not, because many languages support phantom types
+(most common functional programming languages support them, but so do others like
+Rust, and TypeScript, and even[PHP](https://marcosh.github.io/post/2020/05/26/phantom-types-in-php.html))
+so you can apply this knowledge elsewhere!
+
+Before we get stuck into some examples, let's tackle the obvious question.
+
+---
+
+## What are phantom types?
+
+A phantom type is a type parameter that appears on the left hand side of a type's
+definition but not on the right hand side. In other words, it's a type parameter
+that is never used by any of a type's constructors.
+
+```gleam
+pub type Example(phantom) {
+  Example
+}
+```
+
+In the `Example` type we have a type parameter, `phantom`, that isn't used in the
+type's constructor. Phantom types can be used to provide additional safety or
+context to values without paying the runtime cost of carrying additional data around.
+Everything is handled at compile time!
+
+💡 In some languages, the compiler may emit a warning (or refuse to compile at all)
+when a type has unused type parameters. Often there are language-specific solutions
+to this, like [PhantomData](https://doc.rust-lang.org/std/marker/struct.PhantomData.html)
+in Rust or [impossible fields](https://medium.com/@dhruvrajvanshi/advanced-typescript-patterns-6cf8826c7944)
+in TypeScript.
+
+The rest of this article will see us going over **four** different scenarios where
+phantom types can come in to play. The whole article is a bit long so if any of
+the examples describes a scenario that fits you perfectly, feel free to jump straight
+to it!
+
+---
+
+## Example One: Dealing with Ids.
+
+To understand why phantom types might be useful, let's start with a common scenario.
+Imagine we're building a social blogging platform like [dev.to](http://dev.to) or
+[medium.com](http://medium.com). We want to support different users and blog posts,
+so we assign a unique id to all of these things.
+
+We're a scrappy, fast-moving startup so we implement the simplest possible system
+for managing IDs: just type aliasing `Int`s to get things going.
+
+```gleam
+pub type Id = Int
+
+pub fn next(id: Id) -> Id {
+  id + 1
+}
+```
+
+Our platform supports Reddit-style upvoting or liking of posts, and we have a
+function just for that. It takes in the `Id` of a post to upvote and the `Id` of
+the user that upvoted it, and does some magic to make the upvote happen.
+
+```gleam
+pub fn upvote_post(user_id: Id, post_id: Id) -> Nil {
+  // Get a post from the database and upvote it.
+  ...
+}
+```
+
+This lets us rush to production, but maybe you've already spotted a potential problem
+with what we have so far. It's only a matter of time until someone gets the
+parameters the wrong way round and now a totally unrelated user has upvoted a random post.
+
+One solution would be to stop aliasing `Int` and define new types for `PostId`
+and `UserId` instead.
+
+```gleam
+pub type PostId { 
+  PostId(Int) 
+}
+
+pub type UserId { 
+  UserId(Int) 
+}
+```
+
+Now the two id types are successfully disjoint, but as a consequence we'll end up
+with a lot more duplicated code. We'll have to have separate `next` methods to
+increment each id type, similarly if we want to unwrap the type we'll need separate
+`to_int` functions, and the story is the same for `to_string`, and so on...
+
+Really, the underlying representation of an `Id` stays the same no matter how we
+use it. Instead, we'd like the context an `Id` is used in to determine whether
+it is valid or not.
+
+```gleam
+pub opaque type Id(a) {
+  Id(Int)
+}
+
+pub fn new() -> Id(a) {
+  Id(0)
+}
+```
+
+We've now redefined our `Id` type to include a type parameter, `a`, but notice
+how that parameter isn't used in the type's constructor: this is where the name
+**phantom type** comes from. The second thing to notice is that our `new` function
+returns an id with that generic `a` parameter. This lets *callers of the function*
+determine what the type of `a` should be.
+
+```gleam
+let foo: Id(String) = new()
+let bar: Id(Float) = new()
+let baz: Id(Option(Int)) = new()
+```
+
+Now, `foo`, `bar`, and `baz` are all incompatible with each other. We couldn't
+check them for equality, for example, because the types don't match up. Fundamental
+to phantom types is the fact that there is no runtime component, `foo` may be
+annotated as `Id(String)` but no such string exists at runtime, the same for
+`Id(Float)` or any other parameter.
+
+```gleam
+foo == bar // Uh oh, compile error!
+```
+
+This is powerful because we gain the ability to tell the compiler a fact about a
+particular `Id`, and the compiler will do extra work to ensure we don't make any
+mistakes.
+
+```gleam
+pub type User {
+  User(id: Id(User), name: String)
+}
+
+pub type Post {
+  Post(id: Id(Post), content: String)
+}
+
+pub fn upvote_post(user_id: Id(User), post_id: Id(Post)) -> Nil {
+  // Get a post from the database and upvote it.
+  ...
+}
+```
+
+In the snippet above, we've defined `User` and `Post` types and parameterised the
+`Id` type accordingly. Knowing what we know so far about phantom types, we can
+see that the new type signature for `upvote_post` will prevent us from accidentally
+swapping the order of the ids.
+
+```gleam
+let user = User(id: new(), name: "hayleigh")
+let post = Post(id: new(), content: "Phantom Types in Gleam...")
+
+upvote_post(post.id, user.id) // Uh oh, compile error!
+```
+
+Even though our phantom type lets us specialise the `Id` type, we can still write
+functions that work on *all* ids by leaving the type parameter as a variable.
+
+```gleam
+pub fn show(id: Id(a)) -> String {
+  let Id(n) = id
+
+  int.to_string(n)
+}
+
+show(user.id)
+show(post.id)
+```
+
+The ability to restrict or open up functions to different `Id`s is where a lot of
+the power with phantom types comes from.
+
+## Example Two: Handling money.
+
+Let's consider another scenario. We want to build an application that can handle
+monetary transactions such that we can easily work with currencies of the same
+type, but different currencies must be explicitly converted via an exchange rate
+before they can be used together.
+
+Similar to our id scenario, the underlying representation for a value of currency
+is always the same.
+
+```gleam
+pub opaque type Currency(a) {
+  Currency(Float)
+}
+
+pub fn from_float(x: Float) -> Currency(a) {
+  Currency(x)
+}
+```
+
+As before, our `Currency` type has a single type parameter that we'll use to *tag*
+values with a particular type of currency. We also need to define some types to
+act as our currency tags. Because these types are only used for annotations, we'll
+make them opaque.
+
+```gleam
+pub opaque type USD { USD }
+pub opaque type GBP { GBP }
+```
+
+Now we can use everything we've defined so far to create some different currencies.
+
+```gleam
+let dollars: Currency(USD) = from_float(2.50)
+let pennies: Currency(GBP) = from_float(0.55)
+```
+
+Right now we have some currency values, but we can't do a whole lot with them.
+While they're wrapped up in our `Currency` type, we can't use any arithmetic
+operators or pass these values to functions expecting `Float`s.
+
+Let's remedy that by writing two functions, `update` and `combine`. We'll use
+`update` to apply a function to the value wrapped by a `Currency`, and we'll use
+`combine` to apply a function to two `Currency` values.
+
+> 💡 For other data structures these functions might be called `map` and `map2`.
+These imply the type can change, for example `list.map` can be used to turn a
+`List(a)` into a `List(b)`.
+> 
+> Because we want to preserve the type (so we can't convert `Currency(USD)` to
+`Currency(GBP)`) we give these functions different names so there aren't any
+mismatched expectations.
+
+```gleam
+pub fn update(currency: Currency(a), f: fn (Float) -> Float) -> Currency(a) {
+  let Currency(x) = currency
+
+  f(x) |> from_float
+}
+
+pub fn combine(a: Currency(a), b: Currency(a), f: fn (Float, Float) -> Float) -> Currency(a) {
+  let Currency(x) = a
+  let Currency(y) = b
+
+  f(x, y) |> from_float
+}
+```
+
+Because the type parameter for `Currency` doesn't change (these function take a
+`Currency(a)` and return a `Currency(a)`), they can't change the tag of any currency
+passed in.
+
+💡 Both `update` and `combine` are examples of **higher-order functions**. That
+is, they are functions that take *other functions* as one of their arguments (or
+return a new function themselves).
+
+We can use these two functions to define some more functions so we can actually
+*do* things with currency values, like doubling something or adding two currencies
+together.
+
+```gleam
+pub fn double(a: Currency(a)) -> Currency(a) {
+  use x <- update(a)
+
+  x * 2
+}
+
+pub fn add(a: Currency(a), b: Currency(a)) -> Currency(a) {
+  use x, y <- combine(a, b)
+
+  x + y
+}
+```
+
+We can call these functions with any type of currency, but for something like
+`add` we get compile-time safety that ensures we only add two currencies of the
+same type.
+
+```gleam
+double(dollars)       //=> from_float(5.00): Currency(USD)
+add(pennies, pennies) //=> from_float(1.10): Currency(GBP)
+
+add(dollars, pennies) //=> I won't compile!
+```
+
+But what if we *want* to add two currencies together? To do that we need a way
+of converting one currency to another with an exchange rate. We can use phantom
+types again here to define an
+
+`Exchange` type that describes the exchange rate from one currency to another.
+
+```gleam
+pub opaque type Exchange (from, to) {
+  Exchange(Float)
+}
+
+pub fn exchange_rate(r: Float) -> Exchange(from, to) {
+  Exchange(r)
+}
+```
+
+Now, just like we did for currencies, we can define an exchange rate to go from
+`GBP` to `USD` (and vice versa).
+
+```gleam
+let gbp_to_usd: Exchange(GBP, USD) = exchange_rate(1.41)
+let usd_to_gbp: Exchange(USD, GBP) = exchange_rate(0.71)
+```
+
+Using everything we know about phantom types, we can define a `convert` function
+that is type safe; we'll never be able to pass in the wrong exchange rate because
+all the phantom types have to match up!
+
+```gleam
+pub fn convert(a: Currency(from), e: Exchange(from, to)) -> Currency(to) {
+  let Currency(x) = a
+  let Exchange(r) = e
+
+  from_float(x *. r)
+}
+```
+
+Although our module provided the `USD` and `GBP` types to act as currency tags,
+the functions we've written are general to all currencies but retain their type
+safety. If consumers of the module want to define another type of currency, they
+can do that and our functions will still work.
+
+---
+
+## Example Three: Validating data.
+
+So far the two examples we have seen in `Id` and `Currency` have been used to
+provide a general API across types that share the same underlying representation.
+Callers have been able to assert to the compiler what the type of something is
+simply by providing a type annotation. In doing so, the compiler will stop two
+disjoint values being used in the wrong places.
+
+But we can use phantom types for the opposite purpose, to *restrict* the type of
+values consumers can create and push them through our validation code.
+
+```gleam
+pub opaque type Password(unvalidated) {
+  Password(String)
+}
+
+pub opaque type Invalid { Invalid }
+pub opaque type Valid { Valid }
+
+pub fn from_string(s: String) -> Password(Invalid) {
+  Password(s)
+}
+```
+
+Unlike the previous examples, the `from_string` function here returns a
+`Password(Invalid)` rather than a general type that the caller can assert manually.
+This is another powerful aspect of phantom types. The `Password` type is opaque
+in this example, so consumers of this module *must* go through the `from_string`
+function if they want to create passwords.
+
+In doing so, they will have created an invalid password. We can design the rest
+of our API around this fact, writing functions that work on only `Valid` passwords
+and pushing users through our validation logic.
+
+```gleam
+pub fn validate(p: Password(a)) -> Result(Password(Valid), Password(Invalid)) {
+  let Password(s) = p
+
+  case is_valid(s) {
+    True  -> Ok(p)
+    False -> Error(p)
+  }
+}
+```
+
+We could end up with an API that makes use of `Invalid`, `Valid`, or `any`
+passwords that has functions like:
+
+```gleam
+pub fn create_account(p: Password(Valid), email: String) -> User
+pub fn suggest_better(p: Password(Invalid)) -> String
+pub fn to_string(p: Password(any)) -> String
+```
+
+In the real world you probably won't be handling passwords like this (right...
+right?) but the idea transfers to any sort of data you might want to validate.
+
+---
+
+## Example Four: Providing context.
+
+A recent discussion cropped up on the Gleam Discord server (which you should
+totally [join](https://discord.gg/Fm8Pwmy) if you haven't already) where a user
+was attempting to write a wrapper around an existing Erlang library that potentially
+threw various errors from different functions.
+
+In Gleam, these error-throwing functions are typically modelled with the `Result`
+type and a specific `Error` type that describes all the possible reasons that
+function could have failed. A problem arose when two functions – `accept` and
+`listen` – could throw different errors, but one error was shared between them
+both.
+
+Essentially, we wanted:
+
+```gleam
+pub type AcceptError = {
+  SystemLimit
+  Closed
+  Timeout
+  Posix(inet.Posix)
+}
+
+pub type ListenError = {
+  SystemLimit
+  Posix(inet.Posix)
+}
+```
+
+It's not possible for different types in the same module to have variants that share
+the same name (otherwise how would the compiler know what `SystemLimit` meant!)
+so we need to approach the problem differently. We have a few options:
+
+1. Rename all the constructors with an `Accept` or `Listen` prefix to disambiguate
+them. We'd end up with constructors `AcceptSystemLimit` and `ListenSystemLimit`
+which would certainly satisfy the compiler but feels a bit redundant. It also
+potentially confuses or un-focuses the API.
+  
+2. Create separate modules for both of these functions, which would avoid the type
+constructors from clashing with one-another. Doing so, however, makes our API more
+difficult to consume and may complicate things further if types or other functions
+need to be shared.
+  
+3. Abandon function-specific types and instead create a single `Error` type for
+the entire module/API. We lose the ability to express function-specific errors,
+but we have gained simplicity and a way of sharing error types between functions.
+  
+
+If we apply what we now know about phantom types, we could expand this third
+option to include a phantom type that acts as a hint for what function an error
+came from.
+
+```gleam
+pub type Error(from) {
+  SystemLimit
+  Closed
+  Timeout
+  Posix(inet.Posix)
+}
+
+pub opaque type AcceptFn { AcceptFn }
+pub opaque type ListenFn { ListenFn }
+
+pub fn accept(...) -> Error(AcceptFn) {
+  ...
+}
+
+pub fn listen(...) -> Error(ListenFn) {
+  ...
+}
+```
+
+While this approach doesn't give us any additional safety, it does provide a
+*context clue* for developers consuming this function. When handling errors thrown
+by `listen`, they know they can safely ignore the `Closed` and `Timeout` errors
+and focus only on the relevant ones.
+
+💡 In languages with even fancier type systems, we could make use of something
+called a [**generalised algebraic data type (GADT)**](https://en.wikibooks.org/wiki/Haskell/GADT)
+to achieve the same thing but with type safety to boot!
+
+In fact, GADTs are also known as [**first-class phantom types**](https://ecommons.cornell.edu/handle/1813/5614).
+Gleam doesn't support them, and it's unclear if it ever will, but if you're
+interested in this sort of thing you might want to check out OCaml or Haskell.
+
+Providing context clues via phantom types may not always be the best design
+decision, but sometimes it can strike the right balance between simplicity and
+expressive power.
+
+---
+
+## Not a panacea.
+
+At this point you might be itching to apply phantom types to all your code and
+cash in on additional compile-time safety, but there is one major caveat to using
+phantom types in your code.
+
+We cannot branch the behaviour of a function based on a phantom type. To exemplify
+this, consider an impossible implementation of a `to_string` function for our
+`Currency` type.
+
+```gleam
+pub fn to_string (a: Currency(a)) -> String {
+  let Currency(val) = a
+
+  case a.phantom_type {
+    USD -> string.concat("$", float.to_string(val))
+    GBP -> string.concat("£", float.to_string(val))
+    ...
+  }
+}
+```
+
+We've hit the limits of what phantom types can help us express now. Because the
+`to_string` function has to be general to *all* values of `a` in a `Currency(a)`,
+we cannot change behaviour based on the type of `a`.
+
+---
+
+## Food for (future) thought.
+
+Before we wrap up and consolidate what we know about phantom types, I want to
+briefly touch on a property of some languages that makes phantom types even cooler
+(slightly). In some languages, simple wrapper types around another type can remove
+the boxing entirely at runtime. The ceremony of wrapping and unwrapping the type
+with pattern matching stays, but at runtime only the wrapped value remains.
+
+In Haskell, this is what the `newtype` keyword does.
+
+```haskell
+newtype Id = Id Int
+```
+
+And Elm's compiler is smart enough to do this automatically:
+
+```elm
+type Id = Id Int
+```
+
+There's a work-in-progress [pull request](https://github.com/gleam-lang/gleam/issues/637)
+to add support for this sort of thing to Gleam via an `inline` keyword. What does
+this have to do with phantom types? At the moment we pay a slight performance
+cost for these wrapper types in Gleam, as we have to constantly box and unbox
+them. With the proposed `inline` modifier, this (un)boxing can be removed at
+compile time, along with our phantom type annotations. We'll get all of the type
+benefits and pay no runtime cost!
+
+---
+
+## Wrapping things up (pun intended).
+
+To wrap things up, let's summarise what we've (hopefully) learned from this article.
+
+* A **phantom type** is a type variable that appears on the left-hand side of a
+type's definition but is not used on the right-hand side.
+
+* We can use phantom types to *disambiguate* values that share the same underlying
+  structure: `Id(a)` or `Currency(code)`.
+* We can use phantom types to mark values that have been *validated*: `Password(invalid)`.
+* We can use phantom types to provide *context clues* to developers about where
+  a particular value came from or what values are possible: `Error(from)`.
+  
+* We **can't** branch the behaviour of a function based on a phantom type.
+  
+
+And that's about it. We've covered the main use-cases for phantom types but there
+are others, like an [interpreter for a small language](http://www.scs.stanford.edu/11au-cs240h/notes/laziness.html)
+or a type-safe implementation of the [builder pattern](https://gist.github.com/breandan/d0d7c21bb7f78ef54c21ce6a6ac49b68).
+If you're still a bit stumped, you can drop a message on the Gleam discord (which
+you've [joined](https://discord.gg/Fm8Pwmy) already, right?) and I'll probably
+see it.
+
+---
+
+## Additional resources.
+
+There are *plenty* of articles scattered across the Internet that discuss phantom
+types. Many of them typically use the same examples that I've used here, but if
+my writing didn't really hit the idea home you might be well served seeing the
+same thing explained by someone else. Below is a collection of articles that I
+think are particularly well written:
+
+* [Advanced Types in Elm – Phantom Types](https://ckoster22.medium.com/advanced-types-in-elm-phantom-types-808044c5946d)
+* [Modelling Currency in Elm using Phantom Types](https://thoughtbot.com/blog/modeling-currency-in-elm-using-phantom-types)
+* [Three Use Cases of Phantom Types](https://kean.blog/post/phantom-types) 
+
+If you're just getting started with Gleam and you've stumbled across this article,
+firstly, well done for making it to the end. Secondly, if you're scratching your
+head a bit over what any of this means, here are some of the language features
+we've made use of:
+
+* [Custom types](https://gleam.run/book/tour/custom-types.html)
+* [Let bindings](https://gleam.run/book/tour/let-bindings.html)
+* [The `Result` type](https://gleam.run/book/tour/result.html)
+* [The pipe `|>` operator](https://gleam.run/book/tour/functions.html#pipe-operator)
+* [Case expressions](https://gleam.run/book/tour/case-expressions.html)

@@ -1,0 +1,33 @@
+---
+import ExternalIcon from "css.gg/icons/svg/external.svg?raw";
+
+const { name, summary, tags, url } = Astro.props;
+---
+
+<article class="grid grid-cols-5 gap-4">
+  <div class="col-span-4">
+    <header class="group">
+      <a href={url} class="flex items-center text-2xl font-bold group-hover:underline">
+        {name}
+        <span
+          class="ml-2 text-stone-500 group-hover:text-stone-300"
+          set:html={ExternalIcon}
+        />
+      </a>
+    </header>
+
+    <p class="my-4">
+      {summary}
+    </p>
+  </div>
+
+  <aside class="col-span-1 text-right text-stone-500">
+    <ul class="flex flex-row-reverse flex-wrap gap-2 my-4">{
+      tags.map((tag) => (
+        <li class="inline-flex items-center px-2 py-1 text-sm font-medium leading-4 rounded-full text-stone-500 bg-stone-800 hover:text-stone-300">
+          {tag}
+        </li>
+      ))
+    }</ul>
+  </aside>
+</article>
