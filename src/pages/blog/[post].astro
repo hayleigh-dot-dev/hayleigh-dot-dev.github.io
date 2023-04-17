@@ -6,14 +6,19 @@ const { Content } = Astro.props;
 export async function getStaticPaths() {
   const posts = await Astro.glob('../../content/blog/*.mdx')
 
-  return posts.map(({ Content, frontmatter }) => {
-    return {params: { post: frontmatter.slug }, props: { Content} }
+  return posts.flatMap(({ Content, frontmatter }) => {
+    if (frontmatter.external_url) return []
+  
+    return {
+      params: { post: frontmatter.slug },
+      props: { Content} 
+    }
   })
 }
 ---
 
 <BaseLayout>
   <div class="mx-auto my-12 prose prose-stone !prose-invert prose-pre:bg-stone-400">
-  <Content />
+    <Content />
   </div>
 </BaseLayout>
