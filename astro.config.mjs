@@ -9,6 +9,7 @@ const gleamGrammar = readFileSync("./assets/gleam.tmLanguage.json", "utf8");
 
 // https://astro.build/config
 export default defineConfig({
+  site: "https://hayleigh-dot-dev.github.io",
   integrations: [react(), tailwind(), mdx()],
   markdown: {
     shikiConfig: {
