@@ -2,6 +2,7 @@
 
 import app/vault.{type Vault}
 import app/view/date
+import gleam/bool
 import gleam/dict
 import gleam/option.{type Option, None, Some}
 import gleam/time/calendar.{type Date}
@@ -19,6 +20,8 @@ pub fn from_vault(vault: Vault) -> String {
   let sitemap =
     urlset(
       dict.fold(vault.notes, [], fn(urls, slug, note) {
+        use <- bool.guard(note.meta.slug == "/404", urls)
+
         [url(root <> slug, note.meta.updated), ..urls]
       }),
     )
