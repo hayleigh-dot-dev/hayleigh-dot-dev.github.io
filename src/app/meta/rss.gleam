@@ -3,7 +3,9 @@
 import app/note.{type NoteMetadata}
 import app/vault.{type Vault}
 import app/view/date
+import gleam/bool
 import gleam/dict
+import gleam/string
 import lustre/attribute.{attribute}
 import lustre/element.{type Element, element}
 
@@ -22,7 +24,12 @@ pub fn from_vault(vault: Vault) -> String {
       "Hi stranger, I'm Hayleigh. Here is where I share my thoughts, collect
       some notes, and try to carve out a little slice of the internet that feels like
       home.",
-      dict.fold(vault.notes, [], fn(urls, _, note) { [item(note.meta), ..urls] }),
+      dict.fold(vault.notes, [], fn(items, _, note) {
+        use <- bool.guard(note.meta.slug == "/404", items)
+        use <- bool.guard(string.starts_with(note.meta.slug, "/tags/"), items)
+
+        [item(note.meta), ..items]
+      }),
     )
 
   xml <> element.to_readable_string(rss)
