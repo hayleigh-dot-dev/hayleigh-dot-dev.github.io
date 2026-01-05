@@ -6,7 +6,12 @@ import lustre/element/html
 // TYPES -----------------------------------------------------------------------
 
 pub type Meta {
-  Meta(title: String, description: String, attributes: List(#(String, String)))
+  Meta(
+    title: String,
+    description: String,
+    slug: String,
+    attributes: List(#(String, String)),
+  )
 }
 
 // VIEW ------------------------------------------------------------------------
@@ -39,6 +44,19 @@ pub fn view(
         }),
       ),
 
+      // OPEN GRAPH TAGS -------------------------------------------------------
+      html.meta([attribute.name("og:title"), attribute.content(meta.title)]),
+      html.meta([
+        attribute.name("og:description"),
+        attribute.content(meta.description),
+      ]),
+      html.meta([
+        attribute.name("og:url"),
+        attribute.content("https://hayleigh.dev/" <> meta.slug),
+      ]),
+      html.meta([attribute.name("og:type"), attribute.content("article")]),
+
+      // FAVICON ---------------------------------------------------------------
       html.link([
         attribute.rel("icon"),
         attribute.href(
@@ -46,6 +64,7 @@ pub fn view(
         ),
       ]),
 
+      // FONTS & STYLES --------------------------------------------------------
       html.link([
         attribute.rel("preconnect"),
         attribute.href("https://fonts.googleapis.com"),

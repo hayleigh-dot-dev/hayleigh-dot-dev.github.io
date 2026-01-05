@@ -254,6 +254,7 @@ pub fn document_meta(note: Note) -> document.Meta {
   document.Meta(
     title: note.meta.title,
     description: note.meta.summary,
+    slug: note.meta.slug,
     attributes: [],
   )
 }
