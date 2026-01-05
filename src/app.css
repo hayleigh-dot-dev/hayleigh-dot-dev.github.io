@@ -1,0 +1,167 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+    --color-orange-50: oklch(0.978 0.013 42.811);
+    --color-orange-100: oklch(0.95 0.031 42.811);
+    --color-orange-200: oklch(0.901 0.061 42.811);
+    --color-orange-300: oklch(0.836 0.106 42.811);
+    --color-orange-400: oklch(0.748 0.16 42.811);
+    --color-orange-500: oklch(0.694 0.191 42.811);
+    --color-orange-600: oklch(0.633 0.198 42.811);
+    --color-orange-700: oklch(0.546 0.173 42.811);
+    --color-orange-800: oklch(0.47 0.141 42.811);
+    --color-orange-900: oklch(0.411 0.111 42.811);
+    --color-orange-950: oklch(0.268 0.072 42.811);
+
+    --color-pink-50: oklch(0.97 0.02 332.971);
+    --color-pink-100: oklch(0.942 0.043 332.971);
+    --color-pink-200: oklch(0.884 0.09 332.971);
+    --color-pink-300: oklch(0.799 0.175 332.971);
+    --color-pink-400: oklch(0.704 0.271 332.971);
+    --color-pink-500: oklch(0.638 0.322 332.971);
+    --color-pink-600: oklch(0.57 0.325 332.971);
+    --color-pink-700: oklch(0.502 0.29 332.971);
+    --color-pink-800: oklch(0.439 0.248 332.971);
+    --color-pink-900: oklch(0.39 0.207 332.971);
+    --color-pink-950: oklch(0.279 0.162 332.971);
+
+    --color-purple-50: oklch(0.97 0.015 297.467);
+    --color-purple-100: oklch(0.941 0.029 297.467);
+    --color-purple-200: oklch(0.892 0.057 297.467);
+    --color-purple-300: oklch(0.808 0.109 297.467);
+    --color-purple-400: oklch(0.693 0.182 297.467);
+    --color-purple-500: oklch(0.596 0.244 297.467);
+    --color-purple-600: oklch(0.531 0.271 297.467);
+    --color-purple-700: oklch(0.479 0.257 297.467);
+    --color-purple-800: oklch(0.422 0.218 297.467);
+    --color-purple-900: oklch(0.37 0.177 297.467);
+    --color-purple-950: oklch(0.278 0.138 297.467);
+
+    --color-blue-50: oklch(0.962 0.015 279.896);
+    --color-blue-100: oklch(0.931 0.028 279.896);
+    --color-blue-200: oklch(0.871 0.055 279.896);
+    --color-blue-300: oklch(0.784 0.099 279.896);
+    --color-blue-400: oklch(0.668 0.158 279.896);
+    --color-blue-500: oklch(0.575 0.206 279.896);
+    --color-blue-600: oklch(0.5 0.231 279.896);
+    --color-blue-700: oklch(0.445 0.215 279.896);
+    --color-blue-800: oklch(0.389 0.177 279.896);
+    --color-blue-900: oklch(0.349 0.135 279.896);
+    --color-blue-950: oklch(0.252 0.089 279.896);
+
+    --font-sans: "Space Mono", sans-serif;
+    --font-serif: "Young Serif", serif;
+}
+
+@theme inline {
+    --color-orange: var(--color-orange-400);
+    --color-pink: var(--color-pink-300);
+    --color-purple: var(--color-purple-500);
+    --color-blue: var(--color-blue-700);
+    --color-muted: var(--color-stone-600);
+    --color-divider: var(--color-stone-200);
+}
+
+@layer base {
+    body {
+        @apply bg-orange-50/30;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        @apply font-serif text-orange-800;
+    }
+
+    pre code .hl-comment {
+        color: var(--color-muted);
+        font-style: italic;
+    }
+
+    pre code .hl-function {
+        color: var(--color-purple);
+    }
+
+    pre code .hl-keyword {
+        color: var(--color-blue);
+    }
+
+    pre code :is(.hl-module, .hl-variant) {
+        color: var(--color-orange);
+    }
+
+    pre code :is(.hl-number, .hl-string) {
+        color: var(--color-pink);
+    }
+
+    pre code .hl-operator {
+        color: var(--color-stone-400);
+    }
+}
+
+@layer components {
+    /* BOX ------------------------------------------------------------------ */
+    .box {
+        @apply grid;
+        grid-template-columns: 1lh auto 1lh;
+        grid-template-rows: 1lh auto 1lh;
+    }
+
+    .box > :nth-child(1) {
+        @apply col-start-1 row-start-1 col-span-3 border-b border-inherit;
+    }
+
+    .box > :nth-child(2) {
+        @apply col-start-1 row-start-1 row-span-3 border-r border-inherit;
+    }
+
+    .box > :nth-child(4) {
+        @apply col-start-3 row-start-1 row-span-3 border-l border-inherit;
+    }
+
+    .box > :nth-child(5) {
+        @apply col-start-1 col-span-3 row-start-3 border-t border-inherit;
+    }
+
+    /* ARTICLE -------------------------------------------------------------- */
+    main {
+        @apply space-y-12 bg-white;
+    }
+
+    main .header {
+    }
+
+    main .summary {
+    }
+
+    main .content {
+        @apply px-4 pb-4 mx-auto max-w-xl prose prose-stone;
+
+        --tw-prose-body: var(--color-stone-800);
+        --tw-prose-headings: var(--color-stone-900);
+        /*--tw-prose-lead: ;*/
+        /*--tw-prose-links: ;*/
+        /*--tw-prose-bold: ;*/
+        /*--tw-prose-counters: ;*/
+        --tw-prose-bullets: var(--color-orange);
+        /*--tw-prose-hr: ;*/
+        /*--tw-prose-quotes: ;*/
+        /*--tw-prose-quote-borders: ;*/
+        /*--tw-prose-captions: ;*/
+        /*--tw-prose-code: ;*/
+        --tw-prose-pre-code: var(--tw-prose-body);
+        --tw-prose-pre-bg: var(--color-stone-50);
+        /*--tw-prose-th-borders: ;*/
+        /*--tw-prose-td-borders: ;*/
+    }
+
+    /* TAG ------------------------------------------------------------------ */
+    .tag {
+        @apply px-2 py-1 text-xs rounded-sm;
+        @apply hover:underline;
+    }
+}

@@ -1,0 +1,68 @@
+// IMPORTS ---------------------------------------------------------------------
+
+import app/note.{type NoteMetadata}
+import app/vault.{type Vault}
+import app/view/date
+import gleam/dict
+import lustre/attribute.{attribute}
+import lustre/element.{type Element, element}
+
+// CONSTANTS -------------------------------------------------------------------
+
+const xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+
+const root = "https://hayleigh.dev"
+
+// CONSTRUCTORS ----------------------------------------------------------------
+
+pub fn from_vault(vault: Vault) -> String {
+  let rss =
+    rss(
+      "Hayleigh's blog",
+      "Hi stranger, I'm Hayleigh. Here is where I share my thoughts, collect
+      some notes, and try to carve out a little slice of the internet that feels like
+      home.",
+      dict.fold(vault.notes, [], fn(urls, _, note) { [item(note.meta), ..urls] }),
+    )
+
+  xml <> element.to_readable_string(rss)
+}
+
+// ELEMENTS --------------------------------------------------------------------
+
+fn rss(
+  title: String,
+  description: String,
+  children: List(Element(_)),
+) -> Element(_) {
+  element("rss", [attribute("version", "2.0")], [
+    element("channel", [], [
+      element("title", [], [element.text(title)]),
+      element.advanced("", "link", [], [element.text(root)], False, False),
+      element.namespaced(
+        "http://www.w3.org/2005/Atom",
+        "link",
+        [attribute.rel("self"), attribute.href(root <> "/rss.xml")],
+        [],
+      ),
+      element("description", [], [element.text(description)]),
+      element.fragment(children),
+    ]),
+  ])
+}
+
+fn item(meta: NoteMetadata) -> Element(_) {
+  element("item", [], [
+    element("guid", [], [element.text(root <> meta.slug)]),
+    element("title", [], [element.text(meta.title)]),
+    element.advanced(
+      "",
+      "link",
+      [],
+      [element.text(root <> meta.slug)],
+      False,
+      False,
+    ),
+    element("pubDate", [], [element.text(date.to_rfc822(meta.created))]),
+  ])
+}
