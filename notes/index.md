@@ -1,4 +1,6 @@
 ---
+created = 2026-01-04
+updated = 2026-01-06
 summary = """
   Welcome to my digital garden ^.^ Here is where I share my thoughts, collect
   some notes, and try to carve out a little slice of the internet that feels like

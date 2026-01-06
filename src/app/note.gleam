@@ -17,8 +17,6 @@ import gleam/result
 import gleam/set.{type Set}
 import gleam/string
 import gleam/time/calendar.{type Date}
-import gleam/time/duration
-import gleam/time/timestamp
 import jot.{type Document, Document}
 import lustre/attribute
 import lustre/element.{type Element}
@@ -48,11 +46,6 @@ pub type Note {
 ///
 ///
 pub fn read(path: String, vault: String) -> Result(Note, Error) {
-  use info <- result.try(
-    simplifile.file_info(path)
-    |> result.map_error(error.NoteCouldNotBeRead(path, _)),
-  )
-
   use text <- result.try(
     simplifile.read(path)
     |> result.map_error(error.NoteCouldNotBeRead(path, _)),
@@ -96,24 +89,15 @@ pub fn read(path: String, vault: String) -> Result(Note, Error) {
     |> list.append(path_tags)
     |> list.unique
 
-  let created = case tom.get_date(frontmatter, ["created"]) {
-    Ok(date) -> date
-    Error(_) ->
-      timestamp.from_unix_seconds(info.ctime_seconds)
-      |> timestamp.to_calendar(duration.seconds(0))
-      |> pair.first
-  }
+  use created <- result.try(
+    tom.get_date(frontmatter, ["created"])
+    |> result.map_error(error.NoteMissingCreatedDate(slug, _)),
+  )
 
-  let updated =
-    timestamp.from_unix_seconds(info.mtime_seconds)
-    |> timestamp.to_calendar(duration.seconds(0))
-    |> pair.first
-    |> fn(updated) {
-      case created == updated {
-        True -> None
-        False -> Some(updated)
-      }
-    }
+  let updated = case tom.get_date(frontmatter, ["updated"]) {
+    Ok(date) -> Some(date)
+    Error(_) -> None
+  }
 
   let meta = NoteMetadata(slug:, title:, summary:, tags:, created:, updated:)
   let note = Note(meta:, document:)

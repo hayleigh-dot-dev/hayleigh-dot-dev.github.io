@@ -10,6 +10,7 @@ pub type Error {
   GraphCouldNotReadNotes(reason: simplifile.FileError)
   NoteCouldNotBeRead(path: String, reason: simplifile.FileError)
   NoteInvalidFrontmatter(slug: String, reason: tom.ParseError, source: String)
+  NoteMissingCreatedDate(slug: String, reason: tom.GetError)
   NoteMissingSummary(slug: String)
   NoteMissingTitle(slug: String)
   NoteUnknownReference(note: String, reference: String)

@@ -1,4 +1,5 @@
 ---
+created = 2026-01-06
 summary = """
   What a digital garden is varies from person to person. For me, it's a place to
   meander and explore ideas on my own terms, without the pressure of polish or
