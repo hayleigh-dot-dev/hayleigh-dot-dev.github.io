@@ -1,4 +1,5 @@
 ---
+created = 2025-12-01
 summary = """
   Welcome to my digital garden ^.^ Here is where I share my thoughts, collect
   some notes, and try to carve out a little slice of the internet that feels like
@@ -17,4 +18,6 @@ framework [Lustre](https://github.com/lustre-labs/lustre).
 If you have no idea about any of those things, don't worry! Here are some links
 to get to know me better:
 
-- [I've done some public speaking][@me/speaking]
+- [What even is a digital garden anyway?][@meta/digital-garden]
+- [A list of the talks I've given.][@me/speaking]
+- [Any post tagged with "me" (including this one!)][@tags/me]
