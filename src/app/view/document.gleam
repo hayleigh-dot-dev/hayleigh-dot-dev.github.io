@@ -52,7 +52,7 @@ pub fn view(
       ]),
       html.meta([
         attribute.name("og:url"),
-        attribute.content("https://hayleigh.dev/" <> meta.slug),
+        attribute.content("https://hayleigh.dev" <> meta.slug),
       ]),
       html.meta([attribute.name("og:type"), attribute.content("article")]),
 
