@@ -12,7 +12,6 @@ import gleam/bool
 import gleam/dict.{type Dict}
 import gleam/list
 import gleam/option.{type Option, None, Some}
-import gleam/order
 import gleam/pair
 import gleam/result
 import gleam/set.{type Set}
@@ -161,18 +160,64 @@ pub fn tag(name: String, notes: List(NoteMetadata)) -> Note {
   let updated =
     notes
     |> list.sort(fn(a, b) {
-      case a.updated, b.updated {
-        Some(a), Some(b) -> calendar.naive_date_compare(b, a)
-        Some(_), None -> order.Lt
-        None, Some(_) -> order.Gt
-        None, None -> order.Eq
-      }
+      calendar.naive_date_compare(
+        b.updated |> option.unwrap(b.created),
+        a.updated |> option.unwrap(a.created),
+      )
     })
     |> list.first
     |> result.map(fn(last) { last.updated })
     |> result.unwrap(None)
 
   let meta = NoteMetadata(slug:, title:, summary:, tags:, created:, updated:)
+  let document =
+    list.map(notes, fn(note) {
+      "- [" <> note.title <> "](" <> note.slug <> ") – " <> note.summary
+    })
+    |> string.join("\n\n")
+    |> jot.parse
+
+  Note(meta:, document:)
+}
+
+///
+///
+pub fn all(notes: List(NoteMetadata)) -> Note {
+  let slug = "/all"
+  let title = "All my notes"
+  let summary =
+    "A complete list of all my notes, sorted by most-recently updated."
+
+  let tags = ["meta"]
+  let notes =
+    notes
+    |> list.sort(fn(a, b) {
+      calendar.naive_date_compare(
+        b.updated |> option.unwrap(b.created),
+        a.updated |> option.unwrap(a.created),
+      )
+    })
+
+  let assert Ok(created) =
+    notes
+    |> list.last
+    |> result.map(fn(last) { last.created })
+
+  let assert Ok(updated) =
+    notes
+    |> list.first
+    |> result.map(fn(first) { first.updated |> option.unwrap(first.created) })
+
+  let meta =
+    NoteMetadata(
+      slug:,
+      title:,
+      summary:,
+      tags:,
+      created:,
+      updated: Some(updated),
+    )
+
   let document =
     list.map(notes, fn(note) {
       "- [" <> note.title <> "](" <> note.slug <> ") – " <> note.summary
@@ -259,12 +304,13 @@ pub fn document_meta(note: Note) -> document.Meta {
   )
 }
 
-pub fn view(note: Note) -> Element(_) {
+pub fn view(note: Note, referenced_in: List(NoteMetadata)) -> Element(_) {
   box.view([attribute.class("note border-orange")], {
     html.main([], [
       view_header(note.meta),
       view_summary(note.meta),
       view_content(note.document),
+      view_footer(referenced_in),
     ])
   })
 }
@@ -346,4 +392,29 @@ fn view_summary(meta: NoteMetadata) -> Element(_) {
 
 fn view_content(document: Document) -> Element(_) {
   html.div([attribute.class("content")], djot.view(document))
+}
+
+// VIEW FOOTER -----------------------------------------------------------------
+
+fn view_footer(references: List(NoteMetadata)) -> Element(_) {
+  use <- bool.guard(references == [], element.none())
+
+  element.fragment([
+    html.hr([attribute.class("border-orange")]),
+    html.footer([attribute.class("footer")], [
+      html.h2([attribute.class("mb-4 text-lg")], [
+        html.text("Referenced in"),
+      ]),
+      html.ul([], {
+        list.map(references, fn(reference) {
+          html.li([], [
+            html.a([attribute.href(reference.slug)], [
+              html.text(reference.title),
+            ]),
+            html.text(" – " <> reference.summary),
+          ])
+        })
+      }),
+    ]),
+  ])
 }

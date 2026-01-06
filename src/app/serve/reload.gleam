@@ -50,8 +50,10 @@ pub fn start(
   case message {
     ewe.Text(..) | ewe.Binary(..) -> ewe.websocket_continue(state)
 
-    ewe.User(watcher.Note) ->
-      case dict.get(booklet.get(vault).notes, slug) {
+    ewe.User(watcher.Note) -> {
+      let vault = booklet.get(vault)
+
+      case dict.get(vault.notes, slug) {
         Error(_) -> ewe.websocket_continue(state)
 
         Ok(note) -> {
@@ -60,7 +62,15 @@ pub fn start(
               json.to_string(
                 json.object([
                   #("type", json.string("html")),
-                  #("content", json.string(element.to_string(note.view(note)))),
+                  #("content", {
+                    json.string(
+                      element.to_string(
+                        note.view(note, {
+                          vault.references(vault, to: note.meta.slug)
+                        }),
+                      ),
+                    )
+                  }),
                 ]),
               )
             })
@@ -68,6 +78,7 @@ pub fn start(
           ewe.websocket_continue(state)
         }
       }
+    }
 
     ewe.User(watcher.Styles) -> {
       let assert Ok(_) =

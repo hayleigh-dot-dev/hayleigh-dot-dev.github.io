@@ -49,7 +49,7 @@ fn view_block_content(content: List(jot.Container)) -> List(Element(_)) {
   use block <- list.map(content)
 
   case block {
-    jot.ThematicBreak -> element.none()
+    jot.ThematicBreak -> html.hr([])
 
     jot.Paragraph(attributes:, content:) ->
       html.p(view_attributes(attributes), view_inline_content(content))
@@ -83,7 +83,6 @@ fn view_block_content(content: List(jot.Container)) -> List(Element(_)) {
       ])
 
     jot.Codeblock(attributes:, language: _, content:) -> {
-      echo block
       html.pre(view_attributes(attributes), [
         html.code([], [html.text(content)]),
       ])

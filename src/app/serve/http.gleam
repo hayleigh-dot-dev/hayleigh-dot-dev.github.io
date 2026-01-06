@@ -39,31 +39,27 @@ fn handler(
   use request <- middleware.add_html_extensions(request)
   use <- middleware.serve_static_assets(request)
 
-  case request.path, filepath.extension(request.path) {
-    "/.live" <> path, _ ->
+  case request.path {
+    "/.live" <> path ->
       reload.start(Request(..request, path:), vault, css, group_name)
 
-    "/app.css", _ ->
+    "/app.css" ->
       response.new(200)
       |> response.set_header("content-type", "text/css")
       |> response.set_body(ewe.TextData(booklet.get(css)))
 
-    path, Ok("html") | path, Error(_) ->
-      case serve_note(vault, filepath.strip_extension(path)) {
-        Ok(response) -> response
-        Error(_) ->
-          response.new(404)
-          |> response.set_body(ewe.Empty)
-      }
-
-    _, _ ->
-      response.new(404)
-      |> response.set_body(ewe.Empty)
+    path ->
+      serve_note(vault, filepath.strip_extension(path))
+      |> result.lazy_or(fn() { serve_note(vault, "/404") })
+      |> result.lazy_unwrap(fn() {
+        response.set_body(response.new(404), ewe.Empty)
+      })
   }
 }
 
 fn serve_note(vault: Booklet(Vault), slug: String) -> Result(Response, Nil) {
-  use note <- result.try(dict.get(booklet.get(vault).notes, slug))
+  let vault = booklet.get(vault)
+  use note <- result.try(dict.get(vault.notes, slug))
 
   let html =
     document.view(
@@ -71,7 +67,7 @@ fn serve_note(vault: Booklet(Vault), slug: String) -> Result(Response, Nil) {
       [html.script([attribute.src("/live-reload.js")], "")],
       [
         html.div([attribute.class("p-4 mx-auto max-w-3xl")], [
-          note.view(note),
+          note.view(note, vault.references(vault, to: note.meta.slug)),
         ]),
       ],
     )

@@ -1,12 +1,14 @@
 // IMPORTS ---------------------------------------------------------------------
 
 import app/error.{type Error}
-import app/note.{type Note}
+import app/note.{type Note, type NoteMetadata}
+import gleam/bool
 import gleam/dict.{type Dict}
 import gleam/list
 import gleam/option.{None, Some}
 import gleam/result
 import gleam/set.{type Set}
+import gleam/string
 import simplifile
 
 // TYPES -----------------------------------------------------------------------
@@ -89,10 +91,23 @@ pub fn new(source: String) -> Result(Vault, Error) {
   Ok(vault)
 }
 
+// QUERIES ---------------------------------------------------------------------
+
+pub fn references(vault: Vault, to note: String) -> List(NoteMetadata) {
+  use notes, Link(from:, to:) <- set.fold(vault.links, [])
+  use <- bool.guard(to != note, notes)
+  use <- bool.guard(from == "/all" || from == "/404", notes)
+  use <- bool.guard(string.starts_with(from, "/tags/"), notes)
+
+  case dict.get(vault.notes, from) {
+    Ok(reference) -> [reference.meta, ..notes]
+    Error(_) -> notes
+  }
+}
+
 // MANIPULATIONS ---------------------------------------------------------------
 
-pub fn add(vault: Vault, path: String) -> Result(Vault, Error) {
-  use note <- result.try(note.read(path, vault.source))
+pub fn add(vault: Vault, note: Note) -> Result(Vault, Error) {
   let notes = dict.insert(vault.notes, note.meta.slug, note)
   let references = note.references(note)
   use links <- result.try({
@@ -104,6 +119,13 @@ pub fn add(vault: Vault, path: String) -> Result(Vault, Error) {
   })
 
   Ok(Vault(..vault, notes:, links:))
+}
+
+pub fn load(vault: Vault, path: String) -> Result(Vault, Error) {
+  use note <- result.try(note.read(path, vault.source))
+  use vault <- result.try(add(vault, note))
+
+  Ok(vault)
 }
 
 pub fn remove(vault: Vault, slug: String) -> Vault {

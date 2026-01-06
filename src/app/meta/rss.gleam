@@ -26,6 +26,7 @@ pub fn from_vault(vault: Vault) -> String {
       home.",
       dict.fold(vault.notes, [], fn(items, _, note) {
         use <- bool.guard(note.meta.slug == "/404", items)
+        use <- bool.guard(note.meta.slug == "/all", items)
         use <- bool.guard(string.starts_with(note.meta.slug, "/tags/"), items)
 
         [item(note.meta), ..items]

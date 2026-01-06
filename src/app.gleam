@@ -11,12 +11,14 @@ import app/view/document
 import argv
 import booklet
 import filepath
+import gleam/bool
 import gleam/dict
 import gleam/erlang/process
 import gleam/io
 import gleam/list
 import gleam/otp/static_supervisor
 import gleam/result
+import gleam/string
 import group_registry
 import lustre/attribute
 import lustre/element
@@ -29,6 +31,16 @@ pub fn main() {
   case argv.load().arguments {
     ["build"] -> {
       let assert Ok(vault) = vault.new("notes")
+      let all =
+        note.all({
+          use notes, slug, note <- dict.fold(vault.notes, [])
+          use <- bool.guard(slug == "/404", notes)
+          use <- bool.guard(string.starts_with(slug, "/tags/"), notes)
+
+          [note.meta, ..notes]
+        })
+
+      let assert Ok(vault) = vault.add(vault, all)
       let out = "dist"
 
       let _ = simplifile.create_directory("dist")
@@ -37,7 +49,7 @@ pub fn main() {
           let html =
             document.view(note.document_meta(note), [], [
               html.div([attribute.class("p-4 mx-auto max-w-3xl")], [
-                note.view(note),
+                note.view(note, vault.references(vault, to: note.meta.slug)),
               ]),
             ])
           let path = filepath.join(out, note.meta.slug <> ".html")

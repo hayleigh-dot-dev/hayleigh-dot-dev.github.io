@@ -41,7 +41,7 @@ pub fn supervised(
         let slug = filepath.strip_extension(slug)
         let _ =
           booklet.update(vault, fn(vault) {
-            vault.add(vault, slug) |> result.unwrap(vault)
+            vault.load(vault, slug) |> result.unwrap(vault)
           })
 
         Nil
@@ -64,7 +64,7 @@ pub fn supervised(
         let _ =
           booklet.update(vault, fn(vault) {
             vault.remove(vault, slug)
-            |> vault.add(path)
+            |> vault.load(path)
             |> result.unwrap(vault)
           })
 
