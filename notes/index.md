@@ -1,5 +1,4 @@
 ---
-created = 2025-12-01
 summary = """
   Welcome to my digital garden ^.^ Here is where I share my thoughts, collect
   some notes, and try to carve out a little slice of the internet that feels like
