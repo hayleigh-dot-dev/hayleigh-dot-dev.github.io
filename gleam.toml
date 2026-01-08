@@ -5,6 +5,7 @@ version = "1.0.0"
 argv = ">= 1.0.2 and < 2.0.0"
 booklet = ">= 1.1.0 and < 2.0.0"
 contour = ">= 1.2.1 and < 2.0.0"
+clique = { git = "https://github.com/hayleigh-dot-dev/clique.git", ref = "main" }
 ewe = ">= 2.1.1 and < 3.0.0"
 filepath = ">= 1.1.2 and < 2.0.0"
 frontmatter = ">= 1.0.1 and < 2.0.0"

@@ -1,7 +1,13 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+@source "../notes";
 
 @theme {
+    --font-sans: "Space Mono", sans-serif;
+    --font-serif: "Young Serif", serif;
+}
+
+@theme inline {
     --color-orange-50: oklch(0.978 0.013 42.811);
     --color-orange-100: oklch(0.95 0.031 42.811);
     --color-orange-200: oklch(0.901 0.061 42.811);
@@ -50,11 +56,6 @@
     --color-blue-900: oklch(0.349 0.135 279.896);
     --color-blue-950: oklch(0.252 0.089 279.896);
 
-    --font-sans: "Space Mono", sans-serif;
-    --font-serif: "Young Serif", serif;
-}
-
-@theme inline {
     --color-orange: var(--color-orange-400);
     --color-pink: var(--color-pink-300);
     --color-purple: var(--color-purple-500);
@@ -130,16 +131,39 @@
 
     /* ARTICLE -------------------------------------------------------------- */
     main {
-        @apply space-y-12 bg-white;
+        @apply space-y-12;
     }
 
     main .header {
+        @apply px-4 pb-4 pt-12 mx-auto max-w-xl;
+    }
+
+    main .dates {
+        @apply flex justify-between items-baseline text-xs;
+    }
+
+    main .emoji {
+        @apply inline-flex justify-center items-center mr-2 bg-orange-50 rounded-full size-6;
+    }
+
+    main .tags {
+        @apply flex flex-wrap gap-x-2 not-empty:mt-6;
+    }
+
+    main .tag {
+        @apply px-2 py-1 text-xs rounded-sm;
+        @apply hover:underline;
     }
 
     main .summary {
+        @apply py-4 bg-orange-50;
     }
 
-    main :is(.content, .footer) {
+    main .summary > p {
+        @apply px-4 mx-auto max-w-xl text-xl italic;
+    }
+
+    main :is(.content, .references) {
         @apply px-4 pb-4 mx-auto max-w-xl prose prose-stone;
 
         --tw-prose-body: var(--color-stone);
@@ -160,9 +184,8 @@
         /*--tw-prose-td-borders: ;*/
     }
 
-    /* TAG ------------------------------------------------------------------ */
-    .tag {
-        @apply px-2 py-1 text-xs rounded-sm;
-        @apply hover:underline;
+    /* GRAPH ---------------------------------------------------------------- */
+    #graph {
+        @apply w-full aspect-square bg-orange-50;
     }
 }

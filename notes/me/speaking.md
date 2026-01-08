@@ -1,14 +1,13 @@
 ---
 created = 2026-01-04
-summary = """
-  In 2023 I set a little personal goal to do some public speaking and talk about
-  Gleam and Lustre as much as possible. Here you'll find a list of my past and
-  upcoming talks.
-  """
 tags = ["speaking"]
 ---
 
 # Speaking
+
+In 2023 I set a little personal goal to do some public speaking and talk about
+Gleam and Lustre as much as possible. Here you'll find a list of my past and
+upcoming talks.
 
 ## 2026
 

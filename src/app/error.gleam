@@ -8,6 +8,8 @@ import tom
 
 pub type Error {
   GraphCouldNotReadNotes(reason: simplifile.FileError)
+  NoteAlreadyExists(path: String)
+  NoteCouldNotBeCreated(path: String, reason: simplifile.FileError)
   NoteCouldNotBeRead(path: String, reason: simplifile.FileError)
   NoteInvalidFrontmatter(slug: String, reason: tom.ParseError, source: String)
   NoteMissingCreatedDate(slug: String, reason: tom.GetError)

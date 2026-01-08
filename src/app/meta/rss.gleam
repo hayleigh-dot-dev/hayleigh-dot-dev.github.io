@@ -1,7 +1,7 @@
 // IMPORTS ---------------------------------------------------------------------
 
-import app/note.{type NoteMetadata}
-import app/vault.{type Vault}
+import app/data/note.{type Note}
+import app/data/vault.{type Vault}
 import app/view/date
 import gleam/bool
 import gleam/dict
@@ -25,11 +25,11 @@ pub fn from_vault(vault: Vault) -> String {
       some notes, and try to carve out a little slice of the internet that feels like
       home.",
       dict.fold(vault.notes, [], fn(items, _, note) {
-        use <- bool.guard(note.meta.slug == "/404", items)
-        use <- bool.guard(note.meta.slug == "/all", items)
-        use <- bool.guard(string.starts_with(note.meta.slug, "/tags/"), items)
+        use <- bool.guard(note.slug == "/404", items)
+        use <- bool.guard(note.slug == "/all", items)
+        use <- bool.guard(string.starts_with(note.slug, "/tag/"), items)
 
-        [item(note.meta), ..items]
+        [item(note), ..items]
       }),
     )
 
@@ -59,18 +59,18 @@ fn rss(
   ])
 }
 
-fn item(meta: NoteMetadata) -> Element(_) {
+fn item(note: Note) -> Element(_) {
   element("item", [], [
-    element("guid", [], [element.text(root <> meta.slug)]),
-    element("title", [], [element.text(meta.title)]),
+    element("guid", [], [element.text(root <> note.slug)]),
+    element("title", [], [element.text(note.title)]),
     element.advanced(
       "",
       "link",
       [],
-      [element.text(root <> meta.slug)],
+      [element.text(root <> note.slug)],
       False,
       False,
     ),
-    element("pubDate", [], [element.text(date.to_rfc822(meta.created))]),
+    element("pubDate", [], [element.text(date.to_rfc822(note.created))]),
   ])
 }

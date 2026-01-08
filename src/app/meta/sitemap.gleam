@@ -1,6 +1,6 @@
 // IMPORTS ---------------------------------------------------------------------
 
-import app/vault.{type Vault}
+import app/data/vault.{type Vault}
 import app/view/date
 import gleam/bool
 import gleam/dict
@@ -20,9 +20,9 @@ pub fn from_vault(vault: Vault) -> String {
   let sitemap =
     urlset(
       dict.fold(vault.notes, [], fn(urls, slug, note) {
-        use <- bool.guard(note.meta.slug == "/404", urls)
+        use <- bool.guard(note.slug == "/404", urls)
 
-        [url(root <> slug, note.meta.updated), ..urls]
+        [url(root <> slug, note.updated), ..urls]
       }),
     )
 

@@ -27,7 +27,7 @@ pub fn view(attributes: List(Attribute(_)), tag: String) -> Element(_) {
   }
 
   html.a(
-    [attribute.href("/tags/" <> tag), attribute.class(classes), ..attributes],
+    [attribute.href("/tag/" <> tag), attribute.class(classes), ..attributes],
     [html.text(tag)],
   )
 }

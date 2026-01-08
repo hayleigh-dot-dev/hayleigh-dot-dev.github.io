@@ -1,16 +1,15 @@
-import app/note
+import app/data/vault.{type Vault}
 import app/serve/middleware
 import app/serve/reload
 import app/serve/watcher.{type Change}
-import app/vault.{type Vault}
 import app/view/document
 import booklet.{type Booklet}
 import ewe.{type Request, type Response}
 import filepath
-import gleam/dict
 import gleam/erlang/process.{type Name}
 import gleam/http/request.{Request}
 import gleam/http/response
+import gleam/json
 import gleam/result
 import group_registry.{type Message}
 import lustre/attribute
@@ -48,6 +47,8 @@ fn handler(
       |> response.set_header("content-type", "text/css")
       |> response.set_body(ewe.TextData(booklet.get(css)))
 
+    "/graph-data.json" -> serve_graph_data(vault)
+
     path ->
       serve_note(vault, filepath.strip_extension(path))
       |> result.lazy_or(fn() { serve_note(vault, "/404") })
@@ -57,20 +58,23 @@ fn handler(
   }
 }
 
+fn serve_graph_data(vault: Booklet(Vault)) -> Response {
+  let vault = booklet.get(vault)
+  let json = vault.to_graph_json(vault)
+
+  response.new(200)
+  |> response.set_header("content-type", "application/json")
+  |> response.set_body(ewe.TextData(json.to_string(json)))
+}
+
 fn serve_note(vault: Booklet(Vault), slug: String) -> Result(Response, Nil) {
   let vault = booklet.get(vault)
-  use note <- result.try(dict.get(vault.notes, slug))
+  let #(meta, body) = vault.view(vault, slug)
 
   let html =
-    document.view(
-      note.document_meta(note),
-      [html.script([attribute.src("/live-reload.js")], "")],
-      [
-        html.div([attribute.class("p-4 mx-auto max-w-3xl")], [
-          note.view(note, vault.references(vault, to: note.meta.slug)),
-        ]),
-      ],
-    )
+    document.view(meta, [html.script([attribute.src("/live-reload.js")], "")], [
+      body,
+    ])
 
   let body = element.to_document_string(html)
 

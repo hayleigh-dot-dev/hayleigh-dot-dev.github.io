@@ -88,6 +88,8 @@ pub fn view(
         attribute.href("/app.css"),
       ]),
 
+      html.script([attribute.type_("module"), attribute.src("/graph.js")], ""),
+
       element.fragment(head),
     ]),
 

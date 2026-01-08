@@ -1,12 +1,10 @@
 // IMPORTS ---------------------------------------------------------------------
 
-import app/note
+import app/data/vault.{type Vault}
 import app/serve/watcher.{type Change}
-import app/vault.{type Vault}
 import booklet.{type Booklet}
 import ewe.{type Request}
 import filepath
-import gleam/dict
 import gleam/erlang/process.{type Name}
 import gleam/json
 import group_registry.{type Message}
@@ -52,32 +50,19 @@ pub fn start(
 
     ewe.User(watcher.Note) -> {
       let vault = booklet.get(vault)
+      let #(_, body) = vault.view(vault, slug)
 
-      case dict.get(vault.notes, slug) {
-        Error(_) -> ewe.websocket_continue(state)
+      let assert Ok(_) =
+        ewe.send_text_frame(connection, {
+          json.to_string(
+            json.object([
+              #("type", json.string("html")),
+              #("content", json.string(element.to_string(body))),
+            ]),
+          )
+        })
 
-        Ok(note) -> {
-          let assert Ok(_) =
-            ewe.send_text_frame(connection, {
-              json.to_string(
-                json.object([
-                  #("type", json.string("html")),
-                  #("content", {
-                    json.string(
-                      element.to_string(
-                        note.view(note, {
-                          vault.references(vault, to: note.meta.slug)
-                        }),
-                      ),
-                    )
-                  }),
-                ]),
-              )
-            })
-
-          ewe.websocket_continue(state)
-        }
-      }
+      ewe.websocket_continue(state)
     }
 
     ewe.User(watcher.Styles) -> {

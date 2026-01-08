@@ -1,6 +1,5 @@
 import ewe.{type Request, type Response}
 import filepath
-import gleam/erlang/application
 import gleam/http/request.{Request}
 import gleam/http/response
 import gleam/option.{None}
@@ -29,9 +28,31 @@ pub fn add_html_extensions(
 }
 
 pub fn serve_static_assets(request: Request, next: fn() -> Response) -> Response {
-  let assert Ok(priv) = application.priv_directory("app")
-  let path = filepath.join(priv, request.path)
+  use <- serve_dev_assets(request)
+  use <- serve_assets(request)
 
+  next()
+}
+
+fn serve_assets(request: Request, next: fn() -> Response) -> Response {
+  let path = filepath.join("assets", request.path)
+
+  case serve_asset(path) {
+    Ok(response) -> response
+    Error(_) -> next()
+  }
+}
+
+fn serve_dev_assets(request: Request, next: fn() -> Response) -> Response {
+  let path = filepath.join("priv", request.path)
+
+  case serve_asset(path) {
+    Ok(response) -> response
+    Error(_) -> next()
+  }
+}
+
+fn serve_asset(path: String) -> Result(Response, Nil) {
   let mime = case filepath.extension(path) {
     Ok("css") -> "text/css"
     Ok("js") -> "application/javascript"
@@ -49,7 +70,8 @@ pub fn serve_static_assets(request: Request, next: fn() -> Response) -> Response
       response.new(200)
       |> response.set_header("content-type", mime)
       |> response.set_body(file)
+      |> Ok
 
-    Error(_) -> next()
+    Error(_) -> Error(Nil)
   }
 }
