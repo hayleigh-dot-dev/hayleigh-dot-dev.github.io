@@ -1,5 +1,6 @@
 // IMPORTS ---------------------------------------------------------------------
 
+import app/data/note
 import app/data/vault
 import app/meta/rss
 import app/meta/sitemap
@@ -25,6 +26,12 @@ import simplifile
 
 pub fn main() {
   case argv.load().arguments {
+    ["new", slug] -> {
+      let assert Ok(_) = note.new(slug, "")
+
+      Nil
+    }
+
     ["build"] -> {
       let out = "dist"
       let assert Ok(vault) = vault.load()

@@ -69,6 +69,11 @@ pub fn new(slug: String, title: String) -> Result(Note, Error) {
   )
 
   use _ <- result.try(
+    simplifile.create_directory_all(filepath.directory_name(path))
+    |> result.map_error(error.NoteCouldNotBeCreated(path, _)),
+  )
+
+  use _ <- result.try(
     simplifile.write(path, source)
     |> result.map_error(error.NoteCouldNotBeCreated(path, _)),
   )
