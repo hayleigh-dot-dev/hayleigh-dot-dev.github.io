@@ -289,9 +289,12 @@ fn view_note(vault: Vault, note: Note) -> #(document.Meta, Element(_)) {
 
 fn view_note_references(vault: Vault, note: Note) -> Element(_) {
   let references =
-    note.references
-    |> set.to_list
-    |> list.filter_map(dict.get(vault.notes, _))
+    set.fold(vault.links, [], fn(references, link) {
+      case dict.get(vault.notes, link.0) {
+        Ok(referent) if link.1 == note.slug -> [referent, ..references]
+        Ok(_) | Error(_) -> references
+      }
+    })
 
   use <- bool.guard(references == [], element.none())
   let references = list.map(references, view_note_reference)
