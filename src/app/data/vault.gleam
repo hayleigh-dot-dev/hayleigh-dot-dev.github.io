@@ -290,6 +290,9 @@ fn view_note(vault: Vault, note: Note) -> #(document.Meta, Element(_)) {
 fn view_note_references(vault: Vault, note: Note) -> Element(_) {
   let references =
     set.fold(vault.links, [], fn(references, link) {
+      use <- bool.guard(link.0 == "/404", references)
+      use <- bool.guard(link.1 != note.slug, references)
+
       case dict.get(vault.notes, link.0) {
         Ok(referent) if link.1 == note.slug -> [referent, ..references]
         Ok(_) | Error(_) -> references
