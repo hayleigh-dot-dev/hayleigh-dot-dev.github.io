@@ -1,0 +1,16 @@
+name = "client"
+version = "1.0.0"
+target = "javascript"
+
+[dependencies]
+clique = { git = "https://github.com/hayleigh-dot-dev/clique.git", ref = "main" }
+gleam_stdlib = ">= 0.44.0 and < 2.0.0"
+lustre = ">= 5.4.0 and < 6.0.0"
+gleam_javascript = ">= 1.0.0 and < 2.0.0"
+
+[dev-dependencies]
+gleeunit = ">= 1.0.0 and < 2.0.0"
+lustre_dev_tools = ">= 2.3.4 and < 3.0.0"
+
+[tools.lustre.dev]
+watch = ["dev"]
