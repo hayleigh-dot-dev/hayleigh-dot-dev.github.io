@@ -4,21 +4,15 @@ import app/data/note
 import app/data/vault
 import app/meta/rss
 import app/meta/sitemap
-import app/serve/http
-import app/serve/watcher
+import app/serve
 import app/tailwind
 import app/view/document
 import argv
-import booklet
 import filepath
 import gleam/dict
-import gleam/erlang/process
 import gleam/io
 import gleam/json
 import gleam/list
-import gleam/otp/static_supervisor
-import gleam/result
-import group_registry
 import lustre/element
 import simplifile
 
@@ -105,25 +99,7 @@ pub fn main() {
       Nil
     }
 
-    ["serve"] -> {
-      let assert Ok(vault) = vault.load() |> result.map(booklet.new)
-      let css = booklet.new(tailwind.run("src/app.css"))
-
-      let group_name = process.new_name("group")
-
-      let group = group_registry.supervised(group_name)
-      let watcher = watcher.supervised(vault, css, group_name)
-      let server = http.supervised(vault, css, group_name)
-
-      let assert Ok(_) =
-        static_supervisor.new(static_supervisor.RestForOne)
-        |> static_supervisor.add(group)
-        |> static_supervisor.add(watcher)
-        |> static_supervisor.add(server)
-        |> static_supervisor.start
-
-      process.sleep_forever()
-    }
+    ["serve"] -> serve.main()
 
     _ -> io.println("Usage: gleam run (build | serve)")
   }
