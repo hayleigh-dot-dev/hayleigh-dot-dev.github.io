@@ -64,6 +64,14 @@ pub fn view(
         ),
       ]),
 
+      // ALTERNATE RSS FEED -------------------------------------------------------
+      html.link([
+        attribute.rel("alternate"),
+        attribute.type_("application/rss+xml"),
+        attribute.title("Hayleigh's notes RSS feed"),
+        attribute.href("https://hayleigh.dev/rss.xml"),
+      ]),
+
       // FONTS & STYLES --------------------------------------------------------
       html.link([
         attribute.rel("preconnect"),
