@@ -5,6 +5,7 @@ import app/data/vault.{type Vault}
 import app/view/date
 import gleam/bool
 import gleam/dict
+import gleam/option.{None, Some}
 import gleam/string
 import lustre/attribute.{attribute}
 import lustre/element.{type Element, element}
@@ -63,6 +64,10 @@ fn item(note: Note) -> Element(_) {
   element("item", [], [
     element("guid", [], [element.text(root <> note.slug)]),
     element("title", [], [element.text(note.title)]),
+    case note.summary {
+      Some(summary) -> element("description", [], [element.text(summary)])
+      None -> element.none()
+    },
     element.advanced(
       "",
       "link",
